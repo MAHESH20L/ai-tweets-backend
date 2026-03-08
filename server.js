@@ -7,7 +7,10 @@ const app = express();
 
 /* ---------------- MIDDLEWARE ---------------- */
 
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
 /* ---------------- OPENROUTER CLIENT ---------------- */
@@ -16,7 +19,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    "HTTP-Referer": "https://your-frontend-domain.com", // change after deployment
+    "HTTP-Referer": "https://ai-tweets-backend.onrender.com",
     "X-Title": "AI Tweet Generator"
   }
 });
@@ -25,6 +28,10 @@ const client = new OpenAI({
 
 app.get("/", (req, res) => {
   res.send("AI Tweet Generator API running 🚀");
+});
+
+app.get("/health", (req, res) => {
+  res.send("ok");
 });
 
 /* ---------------- EXTRACT DATA ---------------- */
@@ -38,7 +45,7 @@ app.post("/extract", async (req, res) => {
     const prompt = `
 Extract the following marketing information from the user's message.
 
-Return ONLY JSON.
+Return ONLY valid JSON.
 
 Fields:
 brand
@@ -62,6 +69,7 @@ ${message}
 
     const completion = await client.chat.completions.create({
       model: "meta-llama/llama-3.1-8b-instruct",
+      temperature: 0,
       messages: [
         { role: "user", content: prompt }
       ]
@@ -71,10 +79,6 @@ ${message}
 
     console.log("AI Response:", aiText);
 
-    /* -------- SAFE JSON EXTRACTION -------- */
-
-    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-
     let extracted = {
       brand: null,
       industry: null,
@@ -82,12 +86,20 @@ ${message}
       product: null
     };
 
-    if (jsonMatch) {
+    try {
 
-      try {
-        extracted = JSON.parse(jsonMatch[0]);
-      } catch (err) {
-        console.log("JSON parse failed");
+      extracted = JSON.parse(aiText);
+
+    } catch {
+
+      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+
+      if (jsonMatch) {
+        try {
+          extracted = JSON.parse(jsonMatch[0]);
+        } catch {
+          console.log("JSON parse failed");
+        }
       }
 
     }
@@ -117,32 +129,92 @@ app.post("/generate", async (req, res) => {
     console.log("Incoming request:", req.body);
 
     const systemPrompt = `
-You are an intelligent AI social media assistant.
+You are an expert AI social media strategist.
+
+Your task is to analyze the brand and campaign information.
+
+First infer the following:
+
+1. Brand & Product Summary
+• Write 3 bullet points summarizing the brand and product.
+
+2. Brand Tone
+Examples: witty, premium, humorous, bold, minimal, informative.
+
+3. Target Audience
+Describe the likely audience for this campaign.
+
+4. Content Themes
+Examples:
+- promotions
+- product features
+- educational tips
+- industry trends
+- memes
+- community engagement
+
+After analysis, generate tweets.
+
+Return response ONLY in valid JSON using this format:
+
+{
+ "summary": [],
+ "brand_tone": [],
+ "target_audience": "",
+ "content_themes": [],
+ "tweets": [
+   {
+     "text": "",
+     "style": "",
+     "viral_score": ""
+   }
+ ]
+}
 
 Rules:
-- Understand the user's intent.
-- Respond in the same tone as the user.
-- If the user asks for tweets, generate tweets.
-- Do not repeat questions.
 
-When generating tweets:
-• First summarize the brand voice in 3 bullet points.
-• Then generate 10 engaging tweets.
-• Tweets must be short and catchy.
+Summary
+- 3 bullet points summarizing brand & product
+
+Brand Tone
+- 3 bullet points
+
+Content Themes
+- 4 to 6 themes
+
+Tweets
+Generate 10 tweets using a mix of styles:
+• engaging / conversational
+• promotional
+• witty / meme-style
+• informative / value-driven
+
+Tweet rules:
+- short and catchy
+- maximum 200 characters
+- avoid repeating ideas
+- natural social media tone
+
+Also rate each tweet with viral_score from 1–10.
 `;
 
     const userPrompt = `
-User message: ${userMessage || ""}
+User Message:
+${userMessage || ""}
 
-Brand: ${brand || ""}
-Industry: ${industry || ""}
-Campaign Objective: ${objective || ""}
-Product: ${product || ""}
+Brand: ${brand || "Unknown"}
+Industry: ${industry || "Unknown"}
+Campaign Objective: ${objective || "Unknown"}
+Product: ${product || "Unknown"}
+
+Analyze this information and generate tweet content.
 `;
 
     const completion = await client.chat.completions.create({
 
       model: "meta-llama/llama-3.1-8b-instruct",
+      temperature: 0.8,
+      max_tokens: 900,
 
       messages: [
         { role: "system", content: systemPrompt },
@@ -151,9 +223,61 @@ Product: ${product || ""}
 
     });
 
-    const result = completion.choices[0].message.content;
+    const aiText = completion.choices[0].message.content;
 
-    res.json({ result });
+    console.log("AI Raw Output:", aiText);
+
+    let result = {
+      summary: [],
+      brand_tone: [],
+      target_audience: "",
+      content_themes: [],
+      tweets: []
+    };
+
+    try {
+
+      result = JSON.parse(aiText);
+
+    } catch {
+
+      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+
+      if (jsonMatch) {
+        try {
+          result = JSON.parse(jsonMatch[0]);
+        } catch {
+          console.log("JSON parse failed");
+        }
+      }
+
+    }
+
+    /* Normalize tweet structure */
+
+    if (Array.isArray(result.tweets)) {
+
+      result.tweets = result.tweets.map(t => {
+
+        if (typeof t === "string") {
+          return {
+            text: t,
+            style: "",
+            viral_score: ""
+          };
+        }
+
+        return {
+          text: t.text || t.tweet || "",
+          style: t.style || "",
+          viral_score: t.viral_score || ""
+        };
+
+      });
+
+    }
+
+    res.json(result);
 
   } catch (error) {
 
@@ -172,5 +296,5 @@ Product: ${product || ""}
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} 🚀`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
