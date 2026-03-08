@@ -40,14 +40,14 @@ flowchart TD
     OR[meta-llama-3.1-8b ,Brand Analysis + NLP]
     AI[Summary, Brandtone, Target Audience, context themes, tweets]
     FO[Display the output]
-    UI[User see's the output, if not satisfied can click more option for more tweets]
+    FR[User see's the output, if not satisfied can click more option for more tweets]
 
     UI --> FE
     FE --> BE
     BE --> OR
     OR --> AI
     AI --> FO
-    FO --> UI
+    FO --> FR
 ```
     
  
