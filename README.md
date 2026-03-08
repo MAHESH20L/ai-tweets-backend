@@ -49,5 +49,15 @@ flowchart TD
     AI --> FO
     FO --> FR
 ```
-    
+**Used render for safe API Deployment**
+
+**Live webpage** : https://mahesh20l.github.io/ai-tweets-backend/ 
+
+**Conclusion** : 
+The AI Tweet Generator Tool demonstrates how modern AI models can be 
+integrated into a full-stack web application to automate social media content 
+creation. By combining a chat-based user interface, a Node.js backend API, and 
+the meta-llama/llama-3.1-8b-instruct model via OpenRouter, the system is able 
+to understand user input, extract relevant marketing information, analyses brand 
+characteristics, and generate creative tweet suggestions.
  
