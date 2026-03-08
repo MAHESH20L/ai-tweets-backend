@@ -31,54 +31,23 @@ flowchart TD
 ```
 
 **Wrokflow**
-           ┌────────────────────┐
-           │        User        │
-           │  (Chat Interface)  │
-           └─────────┬──────────┘
-                     │
-                     ▼
-        ┌─────────────────────────┐
-        │        Frontend         │
-        │  HTML + CSS + JS (UI)   │
-        │ Handles Chat Messages   │
-        └─────────┬───────────────┘
-                  │ API Request
-                  ▼
-        ┌─────────────────────────┐
-        │        Backend API      │
-        │     Node.js + Express   │
-        │  Routes: /extract       │
-        │          /generate      │
-        └─────────┬───────────────┘
-                  │
-                  ▼
-        ┌─────────────────────────┐
-        │       OpenRouter AI     │
-        │  meta-llama-3.1-8b      │
-        │   Brand Analysis + NLP  │
-        └─────────┬───────────────┘
-                  │
-                  ▼
-        ┌─────────────────────────┐
-        │     AI Response JSON    │
-        │  Summary                │
-        │  Brand Tone             │
-        │  Target Audience        │
-        │  Content Themes         │
-        │  10 Generated Tweets    │
-        └─────────┬───────────────┘
-                  │
-                  ▼
-        ┌─────────────────────────┐
-        │        Frontend UI      │
-        │  Structured Tweet Cards │
-        │  Copy / Edit / More     │
-        └─────────┬───────────────┘
-                  │
-                  ▼
-           ┌────────────────────┐
-           │      User View     │
-           │ Generated Tweets   │
-           └────────────────────┘
 
+```mermaid
+flowchart TD
+    UI[User enters prompt]
+    FE[Frontend script.js handles the prompt]
+    BE[API Call initiated]
+    OR[meta-llama-3.1-8b ,Brand Analysis + NLP]
+    AI[Summary, Brandtone, Target Audience, context themes, tweets]
+    FO[Display the output]
+    UI[User see's the output, if not satisfied can click more option for more tweets]
 
+    UI --> FE
+    FE --> BE
+    BE --> OR
+    OR --> AI
+    AI --> FO
+    FO --> UI
+```
+    
+ 
