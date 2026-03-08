@@ -25,3 +25,55 @@ OpenRouter AI Model (meta-llama/llama-3.1-8b-instruct)
         ↓
 Brand Analysis + Generated Tweets
 
+**Wrokflow**
+           ┌────────────────────┐
+           │        User        │
+           │  (Chat Interface)  │
+           └─────────┬──────────┘
+                     │
+                     ▼
+        ┌─────────────────────────┐
+        │        Frontend         │
+        │  HTML + CSS + JS (UI)   │
+        │ Handles Chat Messages   │
+        └─────────┬───────────────┘
+                  │ API Request
+                  ▼
+        ┌─────────────────────────┐
+        │        Backend API      │
+        │     Node.js + Express   │
+        │  Routes: /extract       │
+        │          /generate      │
+        └─────────┬───────────────┘
+                  │
+                  ▼
+        ┌─────────────────────────┐
+        │       OpenRouter AI     │
+        │  meta-llama-3.1-8b      │
+        │   Brand Analysis + NLP  │
+        └─────────┬───────────────┘
+                  │
+                  ▼
+        ┌─────────────────────────┐
+        │     AI Response JSON    │
+        │  Summary                │
+        │  Brand Tone             │
+        │  Target Audience        │
+        │  Content Themes         │
+        │  10 Generated Tweets    │
+        └─────────┬───────────────┘
+                  │
+                  ▼
+        ┌─────────────────────────┐
+        │        Frontend UI      │
+        │  Structured Tweet Cards │
+        │  Copy / Edit / More     │
+        └─────────┬───────────────┘
+                  │
+                  ▼
+           ┌────────────────────┐
+           │      User View     │
+           │ Generated Tweets   │
+           └────────────────────┘
+
+
