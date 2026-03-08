@@ -15,15 +15,18 @@
 • Clean structured output format.
 
 **System Architecture**
-User Interface (Chat UI)
-        ↓
-Frontend (HTML + CSS + JavaScript)
-        ↓
-Backend API (Node.js + Express)
-        ↓
-OpenRouter AI Model (meta-llama/llama-3.1-8b-instruct)
-        ↓
-Brand Analysis + Generated Tweets
+```mermaid
+flowchart LR
+    UI[User Chat Interface]
+    FE[Frontend<br>HTML + CSS + JavaScript]
+    BE[Backend API<br>Node.js + Express]
+    AI[OpenRouter AI<br>Llama-3.1-8B]
+    OUT[Brand Analysis + Generated Tweets]
+
+    UI --> FE
+    FE --> BE
+    BE --> AI
+    AI --> OUT
 
 **Wrokflow**
            ┌────────────────────┐
