@@ -2,6 +2,8 @@ const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("userInput");
 const typing = document.getElementById("typing");
 
+const API_URL = "https://ai-tweets-backend.onrender.com";
+
 let conversationState = {
     brand: null,
     industry: null,
@@ -99,11 +101,7 @@ function hideTyping() {
 /* ENTER KEY */
 
 function handleKey(event) {
-
-    if (event.key === "Enter") {
-        sendMessage();
-    }
-
+    if (event.key === "Enter") sendMessage();
 }
 
 
@@ -127,7 +125,6 @@ Create promotional tweets for Apple Smart Watch`,
 };
 
 
-
 /* MAIN MESSAGE HANDLER */
 
 async function sendMessage() {
@@ -144,8 +141,6 @@ async function sendMessage() {
     input.value = "";
 
 
-    /* EXIT */
-
     if (text.includes("exit") || text.includes("stop") || text.includes("bye")) {
 
         addMessage("Ok 👍 Come back when you need more tweets!", "bot");
@@ -155,8 +150,6 @@ async function sendMessage() {
 
     }
 
-
-    /* HANDLE MISSING FIELD ANSWERS */
 
     if (awaitingField) {
 
@@ -170,8 +163,6 @@ async function sendMessage() {
 
     }
 
-
-    /* ASK ONLY MISSING FIELDS */
 
     if (!conversationState.brand) {
 
@@ -221,10 +212,9 @@ async function detectFields(userText) {
     try {
 
         waitingForAI = true;
-
         showTyping();
 
-        const res = await fetch("http://localhost:5000/extract", {
+        const res = await fetch(`${API_URL}/extract`, {
 
             method: "POST",
 
@@ -268,10 +258,9 @@ async function generateTweets() {
     try {
 
         waitingForAI = true;
-
         showTyping();
 
-        const res = await fetch("http://localhost:5000/generate", {
+        const res = await fetch(`${API_URL}/generate`, {
 
             method: "POST",
 
@@ -316,9 +305,7 @@ function displayStructuredTweets(data) {
 
     let html = "";
 
-    /* SUMMARY */
-
-    if (data.summary && data.summary.length) {
+    if (data.summary?.length) {
 
         html += `<div class="section">
         <b>📌 Brand & Product Summary</b><br><br>`;
@@ -331,9 +318,7 @@ function displayStructuredTweets(data) {
     }
 
 
-    /* BRAND TONE */
-
-    if (data.brand_tone && data.brand_tone.length) {
+    if (data.brand_tone?.length) {
 
         html += `<div class="section">
         <b>🎯 Brand Tone</b><br><br>`;
@@ -346,8 +331,6 @@ function displayStructuredTweets(data) {
     }
 
 
-    /* TARGET AUDIENCE */
-
     if (data.target_audience) {
 
         html += `<div class="section">
@@ -357,9 +340,7 @@ function displayStructuredTweets(data) {
     }
 
 
-    /* CONTENT THEMES */
-
-    if (data.content_themes && data.content_themes.length) {
+    if (data.content_themes?.length) {
 
         html += `<div class="section">
         <b>🧠 Content Themes</b><br><br>`;
@@ -372,12 +353,11 @@ function displayStructuredTweets(data) {
     }
 
 
-    /* TWEETS */
-
     html += `<div class="section">
     <b>🐦 Generated Tweets</b><br><br>`;
 
-    if (!data.tweets || data.tweets.length === 0) {
+
+    if (!data.tweets?.length) {
 
         html += "No tweets generated.";
 
@@ -385,21 +365,9 @@ function displayStructuredTweets(data) {
 
         data.tweets.forEach((tweet, index) => {
 
-            let text = "";
-            let style = "";
-            let viral = "";
-
-            if (typeof tweet === "string") {
-
-                text = tweet;
-
-            } else {
-
-                text = tweet.text || tweet.tweet || "";
-                style = tweet.style || "";
-                viral = tweet.viral_score || "";
-
-            }
+            let text = typeof tweet === "string" ? tweet : tweet.text || tweet.tweet || "";
+            let style = tweet.style || "";
+            let viral = tweet.viral_score || "";
 
             html += `
             <div class="tweet-card">
@@ -407,9 +375,7 @@ function displayStructuredTweets(data) {
                 <b>Tweet ${index + 1}</b>
                 <span class="copy-btn" onclick="copyTweet(\`${text}\`)">📋</span>
 
-                <div class="tweet-text">
-                ${text}
-                </div>
+                <div class="tweet-text">${text}</div>
 
                 ${style ? `<div class="tweet-style"><i>${style}</i></div>` : ""}
 
@@ -427,15 +393,15 @@ function displayStructuredTweets(data) {
 }
 
 
-
 /* COPY */
 
 function copyTweet(text) {
 
     navigator.clipboard.writeText(text);
 
-}
+    addHTMLMessage(`<i>Tweet copied ✔</i>`, "bot");
 
+}
 
 
 /* RESET */
@@ -450,6 +416,6 @@ function resetConversation() {
     };
 
     awaitingField = null;
-
     tweetsGenerated = false;
+
 }
