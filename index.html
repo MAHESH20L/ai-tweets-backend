@@ -1,17 +1,52 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Redirecting...</title>
+<html lang="en">
 
-<script>
-window.location.href = "frontend/index.html";
-</script>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Tweet Generator</title>
+
+<link rel="stylesheet" href="styles.css">
 
 </head>
+
 <body>
 
-Redirecting...
+<!-- MATRIX BACKGROUND -->
+<canvas id="matrixCanvas"></canvas>
+
+<div class="chat-container">
+
+    <div class="chat-header">
+        AI Tweet Generator 🤖
+    </div>
+
+    <div id="chatBox" class="chat-box"></div>
+
+    <div id="typing" class="typing hidden">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="input-area">
+
+        <input
+            id="userInput"
+            placeholder="Type your answer..."
+            onkeypress="handleKey(event)"
+        >
+
+        <button onclick="sendMessage()">➤</button>
+
+    </div>
+
+</div>
+
+<script src="matrix.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
