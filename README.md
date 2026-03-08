@@ -15,18 +15,20 @@
 • Clean structured output format.
 
 **System Architecture**
+
 ```mermaid
 flowchart LR
     UI[User Chat Interface]
-    FE[Frontend<br>HTML + CSS + JavaScript]
-    BE[Backend API<br>Node.js + Express]
-    AI[OpenRouter AI<br>Llama-3.1-8B]
-    OUT[Brand Analysis + Generated Tweets]
+    FE[Frontend HTML CSS JavaScript]
+    BE[Backend API Node.js Express]
+    AI[OpenRouter AI Llama 3.1 8B]
+    OUT[Brand Analysis and Generated Tweets]
 
     UI --> FE
     FE --> BE
     BE --> AI
     AI --> OUT
+```
 
 **Wrokflow**
            ┌────────────────────┐
