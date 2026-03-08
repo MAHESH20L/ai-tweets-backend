@@ -36,10 +36,10 @@ flowchart TD
 flowchart TD
     UI[User enters prompt]
     FE[Frontend script.js handles the prompt]
-    BE[API Call initiated]
-    OR[meta-llama-3.1-8b ,Brand Analysis + NLP]
-    AI[Summary, Brandtone, Target Audience, context themes, tweets]
-    FO[Display the output]
+    BE[Backend server.js initiates API Call]
+    OR[Openrouter API is called so meta-llama-3.1-8b model is used ,Brand Analysis + NLP]
+    AI[Model analyzes Summary, Brandtone, Target Audience, context themes, tweets]
+    FO[Sends raw json data back to backend]
     FR[User see's the output, if not satisfied can click more option for more tweets]
 
     UI --> FE
