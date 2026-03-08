@@ -7,11 +7,13 @@ background:#3a3a3a;
 
 display:flex;
 justify-content:center;
-align-items:center;
 
-height:100vh;
+/* FIX MOBILE INPUT ISSUE */
+align-items:flex-start;
 
-overflow:hidden;
+min-height:100vh;
+
+overflow-x:hidden;
 
 }
 
@@ -89,6 +91,9 @@ overflow-y:auto;
 background:rgba(255,255,255,0.08);
 
 scroll-behavior:smooth;
+
+/* prevents messages from hiding behind input */
+padding-bottom:80px;
 
 }
 
@@ -176,6 +181,8 @@ display:flex;
 padding:12px;
 
 background:rgba(255,255,255,0.12);
+
+border-top:1px solid rgba(255,255,255,0.1);
 
 }
 
@@ -286,7 +293,37 @@ display:none;
 }
 
 
-/* MOBILE */
+/* TWEET CARDS */
+
+.tweet-card{
+padding:10px;
+margin-bottom:10px;
+border-left:4px solid #1DA1F2;
+background:#f7f9fa;
+border-radius:6px;
+}
+
+.copy-btn{
+float:right;
+cursor:pointer;
+font-size:16px;
+}
+
+
+/* EDIT ICON */
+
+.edit-icon {
+margin-left:8px;
+cursor:pointer;
+font-size:14px;
+}
+
+.edit-icon:hover {
+opacity:0.7;
+}
+
+
+/* MOBILE FIX */
 
 @media (max-width:600px){
 
@@ -297,6 +334,10 @@ height:100vh;
 
 border-radius:0;
 
+}
+
+body{
+justify-content:flex-start;
 }
 
 }
