@@ -9,28 +9,83 @@ let conversationState = {
     product: null
 };
 
+let awaitingField = null;
 let tweetsGenerated = false;
 let waitingForAI = false;
 
 
-/* add message */
+/* ADD MESSAGE */
 
 function addMessage(text, type) {
 
     const msg = document.createElement("div");
-
     msg.classList.add("message", type);
 
-    msg.innerText = text;
+    if (type === "user") {
+
+        const words = text.trim().split(/\s+/);
+        const wordCount = words.length;
+
+        const isSentence =
+            wordCount > 3 ||
+            text.toLowerCase().includes("create") ||
+            text.toLowerCase().includes("generate") ||
+            text.toLowerCase().includes("tweet") ||
+            text.toLowerCase().includes("campaign");
+
+        if (isSentence) {
+
+            msg.innerHTML = `
+                ${text}
+                <span class="edit-icon" onclick="editMessage(\`${text}\`)">✏️</span>
+            `;
+
+        } else {
+
+            msg.innerText = text;
+
+        }
+
+    } else {
+
+        msg.innerText = text;
+
+    }
 
     chatBox.appendChild(msg);
-
     chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+/* ADD HTML MESSAGE */
+
+function addHTMLMessage(html, type) {
+
+    const msg = document.createElement("div");
+    msg.classList.add("message", type);
+    msg.innerHTML = html;
+
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+/* EDIT MESSAGE */
+
+function editMessage(text) {
+
+    input.value = text;
+    input.focus();
+
+    addHTMLMessage(`
+    ✏️ <b>Edit Mode</b><br>
+    Modify the message and press Enter to regenerate tweets.
+    `, "bot");
 
 }
 
 
-/* typing animation */
+/* TYPING */
 
 function showTyping() {
     typing.classList.remove("hidden");
@@ -41,7 +96,7 @@ function hideTyping() {
 }
 
 
-/* enter key */
+/* ENTER KEY */
 
 function handleKey(event) {
 
@@ -52,7 +107,7 @@ function handleKey(event) {
 }
 
 
-/* welcome message */
+/* WELCOME */
 
 window.onload = () => {
 
@@ -64,7 +119,7 @@ window.onload = () => {
 `Tell me about the brand and campaign.
 
 Example:
-Create promotional tweets for Nike running shoes`,
+Create promotional tweets for Apple Smart Watch`,
         "bot");
 
     }, 500);
@@ -89,101 +144,67 @@ async function sendMessage() {
     input.value = "";
 
 
-    if (text.includes("exit") || text.includes("bye")) {
+    /* EXIT */
+
+    if (text.includes("exit") || text.includes("stop") || text.includes("bye")) {
 
         addMessage("Ok 👍 Come back when you need more tweets!", "bot");
 
         resetConversation();
-
         return;
 
     }
 
 
-    if (
-        text.includes("help") ||
-        text.includes("how") ||
-        text.includes("what") ||
-        text.includes("why") ||
-        text.includes("tips") ||
-        text.includes("?")
-    ) {
+    /* HANDLE MISSING FIELD ANSWERS */
 
-        addMessage("Sure 👍 Let me help with that...", "bot");
+    if (awaitingField) {
 
-        await askAI(userText);
+        conversationState[awaitingField] = userText;
+        awaitingField = null;
 
-        return;
+    }
+    else {
+
+        await detectFields(userText);
 
     }
 
 
-    if (tweetsGenerated) {
-
-        if (text.includes("more") || text.includes("yes")) {
-
-            addMessage("Generating more tweets...", "bot");
-
-            await generateTweets();
-
-            return;
-
-        }
-
-        if (text.includes("no")) {
-
-            addMessage("Alright 👍 See you later!", "bot");
-
-            resetConversation();
-
-            return;
-
-        }
-
-    }
-
-
-    /* detect fields using AI */
-
-    await detectFields(userText);
-
-
-    /* check missing fields */
+    /* ASK ONLY MISSING FIELDS */
 
     if (!conversationState.brand) {
 
+        awaitingField = "brand";
         addMessage("What is the brand name?", "bot");
-
         return;
 
     }
 
     if (!conversationState.industry) {
 
+        awaitingField = "industry";
         addMessage("What industry is the brand in?", "bot");
-
         return;
 
     }
 
     if (!conversationState.objective) {
 
+        awaitingField = "objective";
         addMessage("What is the campaign objective? (Promotion / Engagement / Awareness)", "bot");
-
         return;
 
     }
 
     if (!conversationState.product) {
 
+        awaitingField = "product";
         addMessage("What product should we promote?", "bot");
-
         return;
 
     }
 
-
-    /* generate tweets */
 
     addMessage("Perfect! Generating tweets for you...", "bot");
 
@@ -193,7 +214,7 @@ async function sendMessage() {
 
 
 
-/* DETECT FIELDS USING BACKEND AI */
+/* DETECT FIELDS */
 
 async function detectFields(userText) {
 
@@ -203,7 +224,7 @@ async function detectFields(userText) {
 
         showTyping();
 
-        const res = await fetch("https://ai-tweets-backend.onrender.com/extract", {
+        const res = await fetch("http://localhost:5000/extract", {
 
             method: "POST",
 
@@ -221,23 +242,15 @@ async function detectFields(userText) {
 
         hideTyping();
 
-        if (data.brand && !conversationState.brand)
-            conversationState.brand = data.brand;
-
-        if (data.industry && !conversationState.industry)
-            conversationState.industry = data.industry;
-
-        if (data.objective && !conversationState.objective)
-            conversationState.objective = data.objective;
-
-        if (data.product && !conversationState.product)
-            conversationState.product = data.product;
+        if (data.brand) conversationState.brand = data.brand;
+        if (data.industry) conversationState.industry = data.industry;
+        if (data.objective) conversationState.objective = data.objective;
+        if (data.product) conversationState.product = data.product;
 
     }
     catch (error) {
 
         hideTyping();
-
         addMessage("⚠️ AI extraction error.", "bot");
 
     }
@@ -258,7 +271,7 @@ async function generateTweets() {
 
         showTyping();
 
-        const res = await fetch("https://ai-tweets-backend.onrender.com/generate", {
+        const res = await fetch("http://localhost:5000/generate", {
 
             method: "POST",
 
@@ -274,17 +287,19 @@ async function generateTweets() {
 
         hideTyping();
 
-        addMessage(data.result, "bot");
+        displayStructuredTweets(data);
 
         tweetsGenerated = true;
 
-        addMessage("Do you want more tweets? (yes / more / exit)", "bot");
+        addHTMLMessage(`
+        Type <b>more</b> → Generate more tweets<br>
+        Type <b>exit</b> → End chat
+        `, "bot");
 
     }
     catch (error) {
 
         hideTyping();
-
         addMessage("⚠️ AI server error.", "bot");
 
     }
@@ -295,46 +310,129 @@ async function generateTweets() {
 
 
 
-/* ASK AI */
+/* DISPLAY OUTPUT */
 
-async function askAI(question) {
+function displayStructuredTweets(data) {
 
-    try {
+    let html = "";
 
-        waitingForAI = true;
+    /* SUMMARY */
 
-        showTyping();
+    if (data.summary && data.summary.length) {
 
-        const res = await fetch("https://ai-tweets-backend.onrender.com/generate", {
+        html += `<div class="section">
+        <b>📌 Brand & Product Summary</b><br><br>`;
 
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                userMessage: question
-            })
-
+        data.summary.forEach(point => {
+            html += `• ${point}<br>`;
         });
 
-        const data = await res.json();
-
-        hideTyping();
-
-        addMessage(data.result, "bot");
-
-    }
-    catch (error) {
-
-        hideTyping();
-
-        addMessage("⚠️ AI server error.", "bot");
-
+        html += `</div><br>`;
     }
 
-    waitingForAI = false;
+
+    /* BRAND TONE */
+
+    if (data.brand_tone && data.brand_tone.length) {
+
+        html += `<div class="section">
+        <b>🎯 Brand Tone</b><br><br>`;
+
+        data.brand_tone.forEach(tone => {
+            html += `• ${tone}<br>`;
+        });
+
+        html += `</div><br>`;
+    }
+
+
+    /* TARGET AUDIENCE */
+
+    if (data.target_audience) {
+
+        html += `<div class="section">
+        <b>👥 Target Audience</b><br><br>
+        ${data.target_audience}
+        </div><br>`;
+    }
+
+
+    /* CONTENT THEMES */
+
+    if (data.content_themes && data.content_themes.length) {
+
+        html += `<div class="section">
+        <b>🧠 Content Themes</b><br><br>`;
+
+        data.content_themes.forEach(theme => {
+            html += `• ${theme}<br>`;
+        });
+
+        html += `</div><br>`;
+    }
+
+
+    /* TWEETS */
+
+    html += `<div class="section">
+    <b>🐦 Generated Tweets</b><br><br>`;
+
+    if (!data.tweets || data.tweets.length === 0) {
+
+        html += "No tweets generated.";
+
+    } else {
+
+        data.tweets.forEach((tweet, index) => {
+
+            let text = "";
+            let style = "";
+            let viral = "";
+
+            if (typeof tweet === "string") {
+
+                text = tweet;
+
+            } else {
+
+                text = tweet.text || tweet.tweet || "";
+                style = tweet.style || "";
+                viral = tweet.viral_score || "";
+
+            }
+
+            html += `
+            <div class="tweet-card">
+
+                <b>Tweet ${index + 1}</b>
+                <span class="copy-btn" onclick="copyTweet(\`${text}\`)">📋</span>
+
+                <div class="tweet-text">
+                ${text}
+                </div>
+
+                ${style ? `<div class="tweet-style"><i>${style}</i></div>` : ""}
+
+                ${viral ? `<div class="viral-score">🔥 Viral Chance: ${viral}/10</div>` : ""}
+
+            </div>
+            `;
+        });
+    }
+
+    html += `</div>`;
+
+    addHTMLMessage(html, "bot");
+
+}
+
+
+
+/* COPY */
+
+function copyTweet(text) {
+
+    navigator.clipboard.writeText(text);
 
 }
 
@@ -351,6 +449,7 @@ function resetConversation() {
         product: null
     };
 
-    tweetsGenerated = false;
+    awaitingField = null;
 
+    tweetsGenerated = false;
 }
