@@ -17,7 +17,7 @@
 **System Architecture**
 
 ```mermaid
-flowchart LR
+flowchart TD
     UI[User Chat Interface]
     FE[Frontend HTML CSS JavaScript]
     BE[Backend API Node.js Express]
